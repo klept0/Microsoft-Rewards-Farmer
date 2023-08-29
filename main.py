@@ -4,6 +4,7 @@ import logging
 import logging.handlers as handlers
 import random
 import sys
+import subprocess
 from pathlib import Path
 
 from src import Browser, DailySet, Login, MorePromotions, PunchCards, Searches
@@ -15,9 +16,9 @@ POINTS_COUNTER = 0
 
 
 def main():
-    setupLogging()
     args = argumentParser()
     notifier = Notifier(args)
+    setupLogging(args.verbosenotifs, notifier)
     loadedAccounts = setupAccounts()
     for currentAccount in loadedAccounts:
         try:
@@ -26,7 +27,10 @@ def main():
             logging.exception(f"{e.__class__.__name__}: {e}")
 
 
-def setupLogging():
+def setupLogging(verbose_notifs, notifier):
+    ColoredFormatter.verbose_notifs = verbose_notifs
+    ColoredFormatter.notifier = notifier
+
     format = "%(asctime)s [%(levelname)s] %(message)s"
     terminalHandler = logging.StreamHandler(sys.stdout)
     terminalHandler.setFormatter(ColoredFormatter(format))
@@ -82,6 +86,12 @@ def argumentParser() -> argparse.Namespace:
         type=str,
         default=None,
         help="Optional: Discord Webhook URL (ex: https://discord.com/api/webhooks/123456789/ABCdefGhIjKlmNoPQRsTUVwxyZ)",
+    )
+    parser.add_argument(
+        "-vn",
+        "--verbosenotifs",
+        action="store_true",
+        help="Optional: Send all the logs to discord/telegram",
     )
     return parser.parse_args()
 
@@ -151,6 +161,8 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
                 accountPointsCounter = Searches(mobileBrowser).bingSearches(
                     remainingSearchesM
                 )
+        subprocess.call("TASKKILL /f  /IM  CHROME.EXE")
+        subprocess.call("TASKKILL /f  /IM  CHROMEDRIVER.EXE")
 
         logging.info(
             f"[POINTS] You have earned {desktopBrowser.utils.formatNumber(accountPointsCounter - startingPoints)} points today !"
