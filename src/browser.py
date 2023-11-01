@@ -17,19 +17,18 @@ class Browser:
     """WebDriver wrapper class."""
     def giveMeProxy(self):
         try:
-            f = open("proxy.txt")
-            line = str(random.choice(f.readlines())).strip().split(":")
-            f.close()
+            with open("proxy.txt") as f:
+                line = str(random.choice(f.readlines())).strip().split(":")
             if len(line) == 4:
-                output = line[2] + ":" + line[3] + "@" + line[0] + ":" + line[1]
+                output = f"{line[2]}:{line[3]}@{line[0]}:{line[1]}"
             else:
-                output = line[0] + ":" + line[1]
+                output = f"{line[0]}:{line[1]}"
             #print(output)
             return {
-                    "http": f"http://"+output,
-                    "https": f"https://"+output,
-                    "no_proxy": "localhost,127.0.0.1",
-                    }
+                "http": f"http://{output}",
+                "https": f"https://{output}",
+                "no_proxy": "localhost,127.0.0.1",
+            }
         except (FileNotFoundError,IndexError):
             return {}
         
