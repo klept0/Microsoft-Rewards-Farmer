@@ -262,8 +262,8 @@ class Utils:
         ).strip()
 
     # this will return a decimal like 6.248 from randomSeconds(5, 8)
-    def randomSeconds(min_value, max_value):
-        random_number = random.uniform(min_value, max_value)
+    def randomSeconds(self, max_value):
+        random_number = random.uniform(self, max_value)
         return round(random_number, 3)
 
     @staticmethod

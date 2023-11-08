@@ -34,9 +34,8 @@ class Login:
                         continue
 
         if not alreadyLoggedIn:
-            isLocked = self.executeLogin()
-            if(isLocked):
-            	return "Locked"
+            if isLocked := self.executeLogin():
+                return "Locked"
         self.utils.tryDismissCookieBanner()
 
         logging.info("[LOGIN] " + "Logged-in !")
