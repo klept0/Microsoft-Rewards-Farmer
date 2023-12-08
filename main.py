@@ -194,7 +194,7 @@ def setupAccounts() -> list:
     loadedAccounts = json.loads(accountPath.read_text(encoding="utf-8"))
     for account in loadedAccounts:
         if not validEmail(account['username']):
-            logging.error(f"[CREDENTIALS] Wrong Email Address: \'{account['email']}\'")
+            logging.error(f"[CREDENTIALS] Wrong Email Address: \'{account['username']}\'")
             exit()
     random.shuffle(loadedAccounts)
     return loadedAccounts
