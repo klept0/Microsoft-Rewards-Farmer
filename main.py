@@ -5,6 +5,7 @@ import json
 import logging
 import logging.handlers as handlers
 import random
+import re
 import sys
 import time
 from datetime import datetime
@@ -171,10 +172,10 @@ def argumentParser() -> argparse.Namespace:
 
 def setupAccounts() -> list:
     """Sets up and validates a list of accounts loaded from 'accounts.json'."""
-    def email(email):
+    def validEmail(email: str) -> bool:
         """Validate Email."""
         pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
-        return True if re.match(pattern, email) else False
+        return bool(re.match(pattern, email))
         
     accountPath = Path(__file__).resolve().parent / "accounts.json"
     if not accountPath.exists():
@@ -192,7 +193,7 @@ def setupAccounts() -> list:
         exit()
     loadedAccounts = json.loads(accountPath.read_text(encoding="utf-8"))
     for account in loadedAccounts:
-        if not email(account['email']):
+        if not validEmail(account['username']):
             logging.error(f"[CREDENTIALS] Wrong Email Address: \'{account['email']}\'")
             exit()
     random.shuffle(loadedAccounts)
