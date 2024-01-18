@@ -118,26 +118,20 @@ class Utils:
     def getBingInfo(self):
         cookieJar = self.webdriver.get_cookies()
         cookies = {cookie["name"]: cookie["value"] for cookie in cookieJar}
-        tries = 0
         maxTries = 5
-        while tries < maxTries:
+        for _ in range(maxTries):
             with contextlib.suppress(Exception):
                 response = requests.get(
                     "https://www.bing.com/rewards/panelflyout/getuserinfo",
                     cookies=cookies,
                 )
                 if response.status_code == requests.codes.ok:
-                    data = response.json()
-                    return data
-                else:
-                    pass
-            tries += 1
+                    return response.json()
             time.sleep(1)
         return None
 
     def checkBingLogin(self):
-        data = self.getBingInfo()
-        if data:
+        if data := self.getBingInfo():
             return data["userInfo"]["isRewardsUser"]
         else:
             return False
@@ -146,11 +140,7 @@ class Utils:
         return self.getDashboardData()["userStatus"]["availablePoints"]
 
     def getBingAccountPoints(self) -> int:
-        data = self.getBingInfo()
-        if data:
-            return data["userInfo"]["balance"]
-        else:
-            return 0
+        return data["userInfo"]["balance"] if (data := self.getBingInfo()) else 0
 
     def tryDismissAllMessages(self):
         buttons = [
@@ -205,16 +195,12 @@ class Utils:
 
         if "pcSearch" not in counters:
             return 0, 0
-        progressDesktop = 0
-
-        for item in counters['pcSearch']:
-            progressDesktop += item.get('pointProgress', 0)
-
-        targetDesktop = 0
-
-        for item in counters['pcSearch']:
-            targetDesktop += item.get('pointProgressMax', 0)
-
+        progressDesktop = sum(
+            item.get('pointProgress', 0) for item in counters['pcSearch']
+        )
+        targetDesktop = sum(
+            item.get('pointProgressMax', 0) for item in counters['pcSearch']
+        )
         if targetDesktop in [33, 102]:
             # Level 1 or 2 EU/South America
             searchPoints = 3
@@ -239,8 +225,7 @@ class Utils:
         configFile = sessionPath.joinpath("config.json")
         if configFile.exists():
             with open(configFile, "r") as f:
-                config = json.load(f)
-                return config
+                return json.load(f)
         else:
             return {}
 
