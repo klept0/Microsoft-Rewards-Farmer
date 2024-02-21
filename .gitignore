@@ -183,3 +183,4 @@ sessions
 logs
 runbot.bat
 .DS_Store
+autoupdate.py
