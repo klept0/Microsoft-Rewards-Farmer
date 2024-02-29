@@ -14,6 +14,7 @@ def update(version: str):
         exclusions = [e for e in exclusions if e != "" and not e.startswith("#")] + [
             ".gitignore",
             ".git",
+            "autoupdate.py",
         ]
     print("Removing old files...")
     for root, dirs, files in os.walk(".", topdown=False):
@@ -24,6 +25,7 @@ def update(version: str):
                 os.remove(path)
     print("Downloading...")
     r = requests.get(url)
+    print(f"Download status code: {r.status_code}")
     data = BytesIO(r.content)
     print("Extracting...")
     with ZipFile(data, "r") as zipObj:
@@ -34,12 +36,12 @@ def update(version: str):
         ]
         for file in files:
             newName = file.replace(f"{folderName}/", "")
-            dirName = os.path.dirname(newName)
-            if "/" in newName and not os.path.exists(dirName):
-                print(f"Creating folder {dirName}...")
-                os.makedirs(dirName)
-            with zipObj.open(file) as src, open(newName, "wb") as dst:
-                dst.write(src.read())
+            if not os.path.exists(newName):
+                newPath = os.path.join(".", newName)
+                os.makedirs(os.path.dirname(newPath), exist_ok=True)
+                with zipObj.open(file) as src, open(newPath, "wb") as dst:
+                    dst.write(src.read())
+                    print(f"Copied {newName}!")
     with open("version.txt", "w") as f:
         f.write(version)
     print("Done !")
