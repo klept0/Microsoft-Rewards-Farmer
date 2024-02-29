@@ -30,8 +30,6 @@
 
 #### Original bot by [@charlesbel](https://github.com/charlesbel) - refactored/updated/maintained by [@klept0](https://github.com/klept0) and a community of volunteers.
 
-#### Docker version by [@LtCMDstone](https://github.com/LtCMDstone) - [here](https://github.com/LtCMDstone/MS-Rewards-Farmer-Docker)
-
 ---
 
 ## Installation
@@ -80,7 +78,10 @@
 
 - -v/--visible to disable headless
 - -l/--lang to force a language (ex: en)
-- -g/--geo to force a geolocation (ex: US)
+- -g/--geo to force a searching geolocation (ex: US)
+
+  `https://trends.google.com/trends/ for proper geolocation abbreviation for your choice. These MUST be uppercase!!!`
+
 - -p/--proxy to add a proxy to the whole program, supports http/https/socks4/socks5 (overrides per-account proxy in accounts.json)
 
   `(ex: http://user:pass@host:port)`
