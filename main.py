@@ -10,6 +10,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+import os
 
 import pandas as pd
 import psutil
@@ -116,17 +117,26 @@ def setupLogging(verbose_notifs, notifier):
             terminalHandler,
         ],
     )
-
-
+    
 def cleanupChromeProcesses():
-    # Use psutil to find and terminate Chrome processes
-    for process in psutil.process_iter(["pid", "name"]):
-        if process.info["name"] == "chrome.exe":
-            try:
-                psutil.Process(process.info["pid"]).terminate()
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                pass
+    # Get the current user's PID
+    current_pid = os.getpid()
 
+    # Function to recursively terminate child processes
+    def terminate_children(parent_pid):
+        # Get the list of all processes
+        all_processes = psutil.process_iter()
+        for process in all_processes:
+            if process.ppid() == parent_pid:
+                # Recursively terminate children of this process first
+                terminate_children(process.pid)
+                try:
+                    process.terminate()
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    pass
+
+    # Terminate child processes starting from the script's PID
+    terminate_children(current_pid)
 
 def argumentParser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="MS Rewards Farmer")
