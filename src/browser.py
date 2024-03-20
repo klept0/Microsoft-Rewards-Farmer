@@ -86,6 +86,7 @@ class Browser:
         driver = webdriver.Chrome(
             options=options,
             seleniumwire_options=seleniumwireOptions,
+            driver_executable_path="/usr/bin/chromedriver",
             user_data_dir=self.userDataDir.as_posix(),
         )
 
