@@ -1,0 +1,12 @@
+services:
+  # include this block for as many sets of 2 accounts you want to run.
+  # you'll need a new accounts[i].json file for each
+  rewards-farmer1:
+    container_name: ms-rewards-farmer1
+    image: ms-rewards-farmer
+    shm_size: 2gb
+    command: bash -c 'python3 main.py --discord https://discord.com/api/webhooks/1241033843088167003/A_DTEwYalGiFcV01dtfgjMvseMUQVEd-_Z2NYfGD7QE6wTZuuOo6lIcvN8gbXOY8uj7c'
+    volumes:
+      - ./accounts1.json:/app/accounts.json
+      - ./logs1:/app/logs
+    restart: "no"
