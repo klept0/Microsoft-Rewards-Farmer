@@ -4,9 +4,10 @@ config.yaml
 
 # Miscellaneous
 sessions
-logs
+logs*
 runbot.bat
 .DS_Store
 
 # Testing
 venv
+src/__pycache__/*

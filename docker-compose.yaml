@@ -5,7 +5,7 @@ services:
     container_name: ms-rewards-farmer1
     image: ms-rewards-farmer
     shm_size: 2gb
-    command: bash -c 'python3 main.py -v'
+    command: bash -c 'python3 main.py'
     volumes:
       - ./accounts1.json:/app/accounts.json
       - ./logs1:/app/logs
