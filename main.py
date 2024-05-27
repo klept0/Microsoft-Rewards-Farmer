@@ -200,7 +200,7 @@ def executeBot(currentAccount, args: argparse.Namespace):
         accountPointsCounter = Login(desktopBrowser).login()
         startingPoints = accountPointsCounter
         if startingPoints == "Locked":
-            utils.send_notification("🚫 Account is Locked", currentAccount["username"])
+            utils.send_notification("🚫 Account is locked", currentAccount["username"])
             return 0
         if startingPoints == "Verify":
             utils.send_notification("❗ Account needs to be verified", currentAccount["username"])
@@ -252,10 +252,10 @@ def executeBot(currentAccount, args: argparse.Namespace):
             mobileBrowser.closeBrowser()
 
     logging.info(
-        f"[POINTS] You have earned {utils.formatNumber(accountPointsCounter - startingPoints)} points today !"
+        f"[POINTS] You have earned {utils.formatNumber(accountPointsCounter - startingPoints)} points today!"
     )
     logging.info(
-        f"[POINTS] You are now at {utils.formatNumber(accountPointsCounter)} points !"
+        f"[POINTS] You are now at {utils.formatNumber(accountPointsCounter)} points!"
     )
     goalNotifier = ""
     if goalPoints > 0:
@@ -268,6 +268,7 @@ def executeBot(currentAccount, args: argparse.Namespace):
         "Daily Points Update",
         "\n".join(
             [
+                f"👤 Account: {account['username']}",
                 f"⭐️ Points earned today: {utils.formatNumber(accountPointsCounter - startingPoints)}",
                 f"💰 Total points: {utils.formatNumber(accountPointsCounter)}",
                 goalNotifier,
