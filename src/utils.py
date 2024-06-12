@@ -1,41 +1,53 @@
 import contextlib
 import json
 import locale as pylocale
+import os
 import random
 import time
 import urllib.parse
 from pathlib import Path
 
+import apprise
 import requests
+import yaml
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
-import apprise
-import yaml
-
 from .constants import BASE_URL
 
 
 class Utils:
-    def __init__(self, webdriver: WebDriver, config_file='config.yaml'):
+    def __init__(
+        self,
+        webdriver: WebDriver,
+        config_file=os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "..", "config.yaml"
+        ),
+    ):
         self.webdriver = webdriver
         with contextlib.suppress(Exception):
             locale = pylocale.getdefaultlocale()[0]
             pylocale.setlocale(pylocale.LC_NUMERIC, locale)
-        
+
         self.config = self.load_config(config_file)
 
     @staticmethod
     def load_config(config_file):
-        with open(config_file, 'r') as file:
+        with open(config_file, "r") as file:
             return yaml.safe_load(file)
 
     @staticmethod
-    def send_notification(title, body, config_file='config.yaml'):
+    def send_notification(
+        title,
+        body,
+        config_file=os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "..", "config.yaml"
+        ),
+    ):
         apobj = apprise.Apprise()
-        for url in Utils.load_config(config_file)['apprise']['urls']:
+        for url in Utils.load_config(config_file)["apprise"]["urls"]:
             apobj.add(url)
         apobj.notify(body=body, title=title)
 
@@ -202,7 +214,7 @@ class Utils:
             (By.ID, "idSIButton9"),
             (By.CSS_SELECTOR, ".ms-Button.ms-Button--primary"),
             (By.ID, "bnp_btn_accept"),
-            (By.ID, "acceptButton")
+            (By.ID, "acceptButton"),
         ]
         result = False
         for button in buttons:
