@@ -99,9 +99,6 @@ class Login:
     def enterPassword(self, password):
         self.utils.waitUntilClickable(By.NAME, "passwd", 10)
         self.utils.waitUntilClickable(By.ID, "idSIButton9", 10)
-        # browser.webdriver.find_element(By.NAME, "passwd").send_keys(password)
-        # If password contains special characters like " ' or \, send_keys() will not work
-        password = password.replace("\\", "\\\\").replace('"', '\\"')
 
         logging.info("[LOGIN] " + "Writing password...")
 

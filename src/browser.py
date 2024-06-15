@@ -6,6 +6,7 @@ from typing import Any
 
 import ipapi
 import seleniumwire.undetected_chromedriver as webdriver
+from selenium.webdriver import ChromeOptions
 from selenium.webdriver.chrome.webdriver import WebDriver
 
 from src.userAgentGenerator import GenerateUserAgent
@@ -84,10 +85,15 @@ class Browser:
                 "no_proxy": "localhost,127.0.0.1",
             }
 
+        # Obtain webdriver chrome driver version
+        version = self.getChromeVersion()
+        major = int(version.split(".")[0])
+
         driver = webdriver.Chrome(
             options=options,
             seleniumwire_options=seleniumwireOptions,
             user_data_dir=self.userDataDir.as_posix(),
+            version_main=major,
         )
 
         seleniumLogger = logging.getLogger("seleniumwire")
@@ -190,3 +196,14 @@ class Browser:
             except Exception:  # pylint: disable=broad-except
                 return ("en", "US")
         return (lang, geo)
+
+    def getChromeVersion(self) -> str:
+        chrome_options = ChromeOptions()
+        chrome_options.add_argument("--headless=new")
+
+        driver = WebDriver(options=chrome_options)
+        version = driver.capabilities["browserVersion"]
+
+        driver.quit()
+
+        return version
