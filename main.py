@@ -236,10 +236,8 @@ def executeBot(currentAccount, args: argparse.Namespace):
         utils.goHome()
         goalPoints = utils.getGoalPoints()
         goalTitle = utils.getGoalTitle()
-        desktopBrowser.closeBrowser()
 
     if remainingSearchesM != 0:
-        desktopBrowser.closeBrowser()
         with Browser(mobile=True, account=currentAccount, args=args) as mobileBrowser:
             utils = mobileBrowser.utils
             accountPointsCounter = Login(mobileBrowser).login()
@@ -250,7 +248,6 @@ def executeBot(currentAccount, args: argparse.Namespace):
             utils.goHome()
             goalPoints = utils.getGoalPoints()
             goalTitle = utils.getGoalTitle()
-            mobileBrowser.closeBrowser()
 
     logging.info(
         f"[POINTS] You have earned {utils.formatNumber(accountPointsCounter - startingPoints)} points today !"
