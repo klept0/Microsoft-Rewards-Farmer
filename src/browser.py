@@ -200,7 +200,7 @@ class Browser:
     def getChromeVersion(self) -> str:
         chrome_options = ChromeOptions()
         chrome_options.add_argument("--headless=new")
-
+        chrome_options.add_argument("--no-sandbox")
         driver = WebDriver(options=chrome_options)
         version = driver.capabilities["browserVersion"]
 
