@@ -239,7 +239,6 @@ def executeBot(currentAccount, args: argparse.Namespace):
         desktopBrowser.closeBrowser()
 
     if remainingSearchesM != 0:
-        desktopBrowser.closeBrowser()
         with Browser(mobile=True, account=currentAccount, args=args) as mobileBrowser:
             utils = mobileBrowser.utils
             accountPointsCounter = Login(mobileBrowser).login()
