@@ -16,6 +16,7 @@ class MorePromotions:
         morePromotions: list[dict] = self.browser.utils.getDashboardData()[
             "morePromotions"
         ]
+        self.browser.utils.goToRewards()
         for promotion in morePromotions:
             try:
                 promotionTitle = promotion["title"]

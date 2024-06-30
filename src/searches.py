@@ -57,6 +57,12 @@ class Searches:
                 f"google_trends after load = {list(self.googleTrendsShelf.items())}"
             )
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.googleTrendsShelf.__exit__(None, None, None)
+
     def getGoogleTrends(self, wordsCount: int) -> list[str]:
         # Function to retrieve Google Trends search terms
         searchTerms: list[str] = []
@@ -114,7 +120,6 @@ class Searches:
         logging.info(
             f"[BING] Finished {self.browser.browserType.capitalize()} Edge Bing searches !"
         )
-        self.googleTrendsShelf.close()
         return pointsCounter
 
     def bingSearch(self, term: str) -> int:

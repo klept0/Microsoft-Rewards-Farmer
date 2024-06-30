@@ -57,6 +57,7 @@ class PunchCards:
         logging.info("[PUNCH CARDS] " + "Trying to complete the Punch Cards...")
         self.completePromotionalItems()
         punchCards = self.browser.utils.getDashboardData()["punchCards"]
+        self.browser.utils.goToRewards()
         for punchCard in punchCards:
             try:
                 if (
@@ -80,6 +81,7 @@ class PunchCards:
         # Function to complete promotional items
         try:
             item = self.browser.utils.getDashboardData()["promotionalItem"]
+            self.browser.utils.goToRewards()
             destUrl = urllib.parse.urlparse(item["destinationUrl"])
             baseUrl = urllib.parse.urlparse(REWARDS_URL)
             if (

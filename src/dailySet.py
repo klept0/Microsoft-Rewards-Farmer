@@ -16,6 +16,7 @@ class DailySet:
         # Function to complete the Daily Set
         logging.info("[DAILY SET] " + "Trying to complete the Daily Set...")
         data = self.browser.utils.getDashboardData()["dailySetPromotions"]
+        self.browser.utils.goToRewards()
         todayDate = datetime.now().strftime("%m/%d/%Y")
         for activity in data.get(todayDate, []):
             cardId = int(activity["offerId"][-1:])
