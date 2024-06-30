@@ -129,10 +129,14 @@ class Searches:
         logging.debug(f"passedInTerm={passedInTerm}")
 
         for i in range(self.maxAttempts):
-            searchbar = self.browser.utils.waitUntilVisible(
-                By.ID, "sb_form_q", timeToWait=20
-            )
-
+            try:
+                searchbar = self.browser.utils.waitUntilVisible(
+                    By.ID, "sb_form_q", timeToWait=20
+                )
+            catch:
+                logging.debug('Exception in: searchbar = self.browser.utils.waitUntilVisible')
+                continue
+            
             for _ in range(100):
                 searchbar.clear()
                 term = next(termsCycle)
