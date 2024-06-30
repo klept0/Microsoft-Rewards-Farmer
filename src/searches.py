@@ -138,7 +138,7 @@ class Searches:
                 searchbar = self.browser.utils.waitUntilVisible(
                     By.ID, "sb_form_q", timeToWait=20
                 )
-            catch:
+            except:
                 logging.debug('Exception in: searchbar = self.browser.utils.waitUntilVisible')
                 continue
             
