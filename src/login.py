@@ -3,6 +3,7 @@ import contextlib
 import logging
 from argparse import Namespace
 
+from pyotp import TOTP
 from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from undetected_chromedriver import Chrome
@@ -42,13 +43,13 @@ class Login:
         self.utils.waitUntilClickable(By.ID, "idSIButton9").click()
 
         # noinspection PyUnusedLocal
-        isTwoFactorEnabled: bool = False
+        isPasswordlessEnabled: bool = False
         with contextlib.suppress(TimeoutException):
             self.utils.waitUntilVisible(By.ID, "pushNotificationsTitle")
-            isTwoFactorEnabled = True
-        logging.debug(f"isTwoFactorEnabled = {isTwoFactorEnabled}")
+            isPasswordlessEnabled = True
+        logging.debug(f"isPasswordlessEnabled = {isPasswordlessEnabled}")
 
-        if isTwoFactorEnabled:
+        if isPasswordlessEnabled:
             # todo - Handle 2FA when running headless
             assert (
                 self.args.visible
@@ -58,13 +59,6 @@ class Login:
             )
             input()
 
-            with contextlib.suppress(
-                TimeoutException
-            ):  # In case user clicked stay signed in
-                self.utils.waitUntilVisible(
-                    By.NAME, "kmsiForm"
-                )  # kmsi = keep me signed form
-                self.utils.waitUntilClickable(By.ID, "acceptButton").click()
         else:
             passwordField = self.utils.waitUntilClickable(By.NAME, "passwd")
             logging.info("[LOGIN] Entering password...")
@@ -73,6 +67,35 @@ class Login:
             assert passwordField.get_attribute("value") == self.browser.password
             self.utils.waitUntilClickable(By.ID, "idSIButton9").click()
 
+            # noinspection PyUnusedLocal
+            isTwoFactorEnabled: bool = False
+            with contextlib.suppress(TimeoutException):
+                self.utils.waitUntilVisible(By.ID, "idTxtBx_SAOTCC_OTC")
+                isTwoFactorEnabled = True
+            logging.debug(f"isTwoFactorEnabled = {isTwoFactorEnabled}")
+
+            if isTwoFactorEnabled:
+                if self.browser.totp is not None:
+                    # TOTP token provided
+                    logging.info("[LOGIN] Entering OTP...")
+                    otp = TOTP(self.browser.totp.replace(" ", "")).now()
+                    otpField = self.utils.waitUntilClickable(By.ID, "idTxtBx_SAOTCC_OTC")
+                    otpField.send_keys(otp)
+                    assert otpField.get_attribute("value") == otp
+                    self.utils.waitUntilClickable(By.ID, "idSubmit_SAOTCC_Continue").click()
+                else:
+                    # No TOTP token provided, manual intervention required
+                    assert (
+                        self.args.visible
+                    ), "2FA detected, provide token in accounts.json or run in visible mode to handle login"
+                    print(
+                        "2FA detected, handle prompts and press enter when on keep me signed in page"
+                    )
+                    input()
+
+        with contextlib.suppress(
+            TimeoutException
+        ):  # In case user clicked stay signed in
             self.utils.waitUntilVisible(
                 By.NAME, "kmsiForm"
             )  # kmsi = keep me signed form

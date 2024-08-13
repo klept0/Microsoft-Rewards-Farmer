@@ -40,6 +40,7 @@ class Browser:
         self.headless = not args.visible
         self.username = account.username
         self.password = account.password
+        self.totp = account.totp
         self.localeLang, self.localeGeo = self.getCCodeLang(args.lang, args.geo)
         self.proxy = None
         if args.proxy:
