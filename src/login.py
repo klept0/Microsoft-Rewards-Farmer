@@ -33,33 +33,34 @@ class Login:
         assert self.utils.isLoggedIn()
 
     def executeLogin(self) -> None:
-        self.utils.waitUntilVisible(By.ID, "i0116")
-
-        emailField = self.utils.waitUntilClickable(By.NAME, "loginfmt")
+        # Email field
+        emailField = self.utils.waitUntilVisible(By.ID, "i0116")
         logging.info("[LOGIN] Entering email...")
         emailField.click()
         emailField.send_keys(self.browser.username)
         assert emailField.get_attribute("value") == self.browser.username
         self.utils.waitUntilClickable(By.ID, "idSIButton9").click()
 
-        # noinspection PyUnusedLocal
-        isPasswordlessEnabled: bool = False
+        # Passwordless check
+        isPasswordless = False
         with contextlib.suppress(TimeoutException):
-            self.utils.waitUntilVisible(By.ID, "pushNotificationsTitle")
-            isPasswordlessEnabled = True
-        logging.debug(f"isPasswordlessEnabled = {isPasswordlessEnabled}")
+            self.utils.waitUntilVisible(By.ID, "displaySign", 5)
+            isPasswordless = True
+        logging.debug("isPasswordless = %s", isPasswordless)
 
-        if isPasswordlessEnabled:
-            # todo - Handle 2FA when running headless
-            assert (
-                self.args.visible
-            ), "2FA detected, run in visible mode to handle login"
-            print(
-                "2FA detected, handle prompts and press enter when on keep me signed in page"
+        if isPasswordless:
+            # Passworless login, have user confirm code on phone
+            codeField = self.utils.waitUntilVisible(By.ID, "displaySign")
+            logging.warning(
+                "[LOGIN] Confirm your login with code %s on your phone (you have"
+                " one minute)!\a",
+                codeField.text,
             )
-            input()
+            self.utils.waitUntilVisible(By.NAME, "kmsiForm", 60)
+            logging.info("[LOGIN] Successfully verified!")
 
         else:
+            # Password-based login, enter password from accounts.json
             passwordField = self.utils.waitUntilClickable(By.NAME, "passwd")
             logging.info("[LOGIN] Entering password...")
             passwordField.click()
@@ -68,7 +69,7 @@ class Login:
             self.utils.waitUntilClickable(By.ID, "idSIButton9").click()
 
             # noinspection PyUnusedLocal
-            isTwoFactorEnabled: bool = False
+            isTwoFactorEnabled = False
             with contextlib.suppress(TimeoutException):
                 self.utils.waitUntilVisible(By.ID, "idTxtBx_SAOTCC_OTC")
                 isTwoFactorEnabled = True
@@ -93,18 +94,15 @@ class Login:
                     )
                     input()
 
-        with contextlib.suppress(
-            TimeoutException
-        ):  # In case user clicked stay signed in
-            self.utils.waitUntilVisible(
-                By.NAME, "kmsiForm"
-            )  # kmsi = keep me signed form
-            self.utils.waitUntilClickable(By.ID, "acceptButton").click()
+        self.utils.waitUntilVisible(By.NAME, "kmsiForm")
+        self.utils.waitUntilClickable(By.ID, "acceptButton").click()
 
+        # TODO: This should probably instead be checked with an element's id,
+        # as the hardcoded text might be different in other languages
         isAskingToProtect = self.utils.checkIfTextPresentAfterDelay(
-            "protect your account"
+            "protect your account", 5
         )
-        logging.debug(f"isAskingToProtect = {isAskingToProtect}")
+        logging.debug(f"isAskingToProtect = %s", isAskingToProtect)
 
         if isAskingToProtect:
             assert (
