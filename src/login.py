@@ -44,7 +44,7 @@ class Login:
         # Passwordless check
         isPasswordless = False
         with contextlib.suppress(TimeoutException):
-            self.utils.waitUntilVisible(By.ID, "displaySign", 5)
+            self.utils.waitUntilVisible(By.ID, "displaySign")
             isPasswordless = True
         logging.debug("isPasswordless = %s", isPasswordless)
 
@@ -68,14 +68,42 @@ class Login:
             assert passwordField.get_attribute("value") == self.browser.password
             self.utils.waitUntilClickable(By.ID, "idSIButton9").click()
 
-            # noinspection PyUnusedLocal
-            isTwoFactorEnabled = False
+            # Check if 2FA is enabled, both device auth and TOTP are supported
+            isDeviceAuthEnabled = False
             with contextlib.suppress(TimeoutException):
-                self.utils.waitUntilVisible(By.ID, "idTxtBx_SAOTCC_OTC")
-                isTwoFactorEnabled = True
-            logging.debug(f"isTwoFactorEnabled = {isTwoFactorEnabled}")
+                self.utils.waitUntilVisible(By.ID, "idSpan_SAOTCAS_DescSessionID")
+                isDeviceAuthEnabled = True
+            logging.debug("isDeviceAuthEnabled = %s", isDeviceAuthEnabled)
 
-            if isTwoFactorEnabled:
+            isTOTPEnabled = False
+            with contextlib.suppress(TimeoutException):
+                self.utils.waitUntilVisible(By.ID, "idTxtBx_SAOTCC_OTC", 1)
+                isTOTPEnabled = True
+            logging.debug("isTOTPEnabled = %s", isTOTPEnabled)
+
+            if isDeviceAuthEnabled:
+                # For some reason, undetected chromedriver doesn't receive the confirmation
+                # after the user has confirmed the login on their phone.
+                raise Exception(
+                    "Unfortunatly, device auth is not supported yet. Turn on"
+                    " passwordless login in your account settings, use TOTPs or remove"
+                    " 2FA altogether."
+                )
+
+                # Device auth, have user confirm code on phone
+                codeField = self.utils.waitUntilVisible(
+                    By.ID, "idSpan_SAOTCAS_DescSessionID"
+                )
+                logging.warning(
+                    "[LOGIN] Confirm your login with code %s on your phone (you have"
+                    " one minute)!\a",
+                    codeField.text,
+                )
+                self.utils.waitUntilVisible(By.NAME, "kmsiForm", 60)
+                logging.info("[LOGIN] Successfully verified!")
+
+            elif isTOTPEnabled:
+                # One-time password required
                 if self.browser.totp is not None:
                     # TOTP token provided
                     logging.info("[LOGIN] Entering OTP...")
@@ -84,13 +112,16 @@ class Login:
                     otpField.send_keys(otp)
                     assert otpField.get_attribute("value") == otp
                     self.utils.waitUntilClickable(By.ID, "idSubmit_SAOTCC_Continue").click()
+
                 else:
-                    # No TOTP token provided, manual intervention required
-                    assert (
-                        self.args.visible
-                    ), "2FA detected, provide token in accounts.json or run in visible mode to handle login"
+                    # TOTP token not provided, manual intervention required
+                    assert self.args.visible, (
+                        "[LOGIN] 2FA detected, provide token in accounts.json or run in"
+                        " visible mode to handle login."
+                    )
                     print(
-                        "2FA detected, handle prompts and press enter when on keep me signed in page"
+                        "[LOGIN] 2FA detected, handle prompts and press enter when on"
+                        " keep me signed in page."
                     )
                     input()
 
@@ -102,7 +133,7 @@ class Login:
         isAskingToProtect = self.utils.checkIfTextPresentAfterDelay(
             "protect your account", 5
         )
-        logging.debug(f"isAskingToProtect = %s", isAskingToProtect)
+        logging.debug("isAskingToProtect = %s", isAskingToProtect)
 
         if isAskingToProtect:
             assert (
