@@ -9,7 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support for automatic handling of time-based one-time password authentication
+- Support for automatic handling of logins with 2FA and for passwordless setups:
+  - Passwordless login is supported in both visible and headless mode by displaying the code that the user has to select on their phone in the terminal window
+  - 2FA login with TOTPs is supported in both visible and headless mode by allowing the user to provide their TOTP key in `accounts.json` which automatically generates the one time password
+  - 2FA login with device-based authentication is supported in theory, BUT doesn't currently work as the undetected chromedriver for some reason does not receive the confirmation signal after the user approves the login
 
 ## [0.2.1] - 2024-08-13
 
