@@ -11,90 +11,161 @@ from .activities import Activities
 from .utils import Utils
 
 
-# todo Rename MoreActivities?
+
 class MorePromotions:
+
+
     def __init__(self, browser: Browser):
         self.browser = browser
         self.activities = Activities(browser)
+        self.webdriver = browser.webdriver
 
-    # todo Refactor so less complex
     def completeMorePromotions(self):
-        # Function to complete More Promotions
         logging.info("[MORE PROMOS] " + "Trying to complete More Promotions...")
-        morePromotions: list[dict] = self.browser.utils.getDashboardData()[
-            "morePromotions"
-        ]
+        morePromotions: list[dict] = self.browser.utils.getDashboardData()["morePromotions"]
         self.browser.utils.goToRewards()
         for promotion in morePromotions:
             try:
                 promotionTitle = promotion["title"].replace("\u200b", "").replace("\xa0", " ")
                 logging.debug(f"promotionTitle={promotionTitle}")
                 # Open the activity for the promotion
-                if (
-                    promotion["complete"] is not False
-                    or promotion["pointProgressMax"] == 0
-                ):
+                if (promotion["complete"] is not False
+                    or promotion["pointProgressMax"] == 0):
                     logging.debug("Already done, continuing")
                     continue
-                self.activities.openMorePromotionsActivity(
-                    morePromotions.index(promotion)
-                )
+
+                pointsBefore = self.browser.utils.getAccountPoints()
+                self.activities.openMorePromotionsActivity(morePromotions.index(promotion))
                 self.browser.webdriver.execute_script("window.scrollTo(0, 1080)")
                 with contextlib.suppress(TimeoutException):
-                    searchbar = self.browser.utils.waitUntilClickable(
-                        By.ID, "sb_form_q"
-                    )
-                    self.browser.utils.click(searchbar)
-                # todo These and following are US-English specific, maybe there's a good way to internationalize
-                # todo Could use dictionary of promotionTitle to search to simplify
+                    searchbar = self.browser.utils.waitUntilClickable(By.ID, "sb_form_q")
+                    searchbar.click()
+                    searchbar.clear() #Add
                 if "Search the lyrics of a song" in promotionTitle:
-                    searchbar.send_keys("black sabbath supernaut lyrics")
+                    keys = "black sabbath supernaut lyrics"
+                    searchbar.send_keys(f"{keys}")
                     searchbar.submit()
                 elif "Translate anything" in promotionTitle:
-                    searchbar.send_keys("translate pencil sharpener to spanish")
+                    keys = "translate pencil sharpener to spanish"
+                    searchbar.send_keys(f"{keys}")
                     searchbar.submit()
-                elif "Let's watch that movie again!" in promotionTitle:
-                    searchbar.send_keys("aliens movie")
+                elif "Planen Sie einen Kurztrip" in promotionTitle:
+                    keys ="find me a flight"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Entdecken Sie freie Stellen" in promotionTitle:
+                    keys = "find me jobs in my area"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Die Kunst von Cézanne" in promotionTitle:
+                    keys = "Cézanne Art"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Stein für Stein" in promotionTitle:
+                    keys = "Stick and Stones"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Wie spät ist es?" in promotionTitle:
+                    keys = "What time is it"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Naturwunder" in promotionTitle:
+                    keys = "Torres del Paine Nationalpark"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Zeit zum Spielen" in promotionTitle:
+                    keys = "Call of Duty"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Wer hat gewonnen?" in promotionTitle:
+                    keys = "Fc bayern"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Erweitern Sie Ihr Vokabular" in promotionTitle:
+                    keys = "Was bedeutet wortschatz"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Bleiben Sie bezüglich der Wahlen auf dem Laufenden" in promotionTitle:
+                    keys = "elections"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Suchen Sie einen Liedtext" in promotionTitle:
+                    keys = "Lyrics Mona Lisa"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Filmbegriffe" in promotionTitle:
+                    keys = "Was ist eine lange Einstellung im Film?"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Naturwunder" in promotionTitle:
+                    keys = "Torres del Paine Nationalpark"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Machen Sie die Tour" in promotionTitle:
+                    keys = "Do a Tour"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Kunstwerke am Strand" in promotionTitle:
+                    keys = "So geht Sandkunst"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Take the tour" in promotionTitle:
+                    keys = "Tour Planing and taking"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Diesen Film noch einmal anschauen" in promotionTitle:
+                    keys = "Spiderman Movie"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Let's watch that movie again" in promotionTitle:
+                    keys = "watch aliens movie"
+                    searchbar.send_keys(f"{keys}")
                     searchbar.submit()
                 elif "Discover open job roles" in promotionTitle:
-                    searchbar.send_keys("walmart open job roles")
+                    keys = "walmart open job roles"
+                    searchbar.send_keys(f"{keys}")
                     searchbar.submit()
                 elif "Plan a quick getaway" in promotionTitle:
-                    searchbar.send_keys("flights nyc to paris")
+                    keys = "flights nyc to paris"
+                    searchbar.send_keys(f"{keys}")
                     searchbar.submit()
                 elif "You can track your package" in promotionTitle:
-                    searchbar.send_keys("usps tracking")
+                    keys = "usps tracking"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Jennifer Lopez-Bewunderer?" in promotionTitle:
+                    keys = "Bing Jennifer Lopez-Quiz"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Übersetzen Sie etwas!" in promotionTitle:
+                    keys = "Translate Transe"
+                    searchbar.send_keys(f"{keys}")
                     searchbar.submit()
                 elif "Find somewhere new to explore" in promotionTitle:
-                    searchbar.send_keys("directions to new york")
+                    keys = "directions to new york"
+                    searchbar.send_keys(f"{keys}")
                     searchbar.submit()
                 elif "Too tired to cook tonight?" in promotionTitle:
-                    searchbar.send_keys("Pizza Hut near me")
+                    keys = "mcdonalds"
+                    searchbar.send_keys(f"{keys}")
+                    searchbar.submit()
+                elif "Ganzheitliche Vorteile" in promotionTitle:
+                    keys = "Akupunktur"
+                    searchbar.send_keys(f"{keys}")
                     searchbar.submit()
                 elif "Quickly convert your money" in promotionTitle:
-                    searchbar.send_keys("convert 374 usd to yen")
+                    keys = "convert 325 usd to yen"
+                    searchbar.send_keys(f"{keys}")
                     searchbar.submit()
                 elif "Learn to cook a new recipe" in promotionTitle:
-                    searchbar.send_keys("how cook pierogi")
-                    searchbar.submit()
-                elif "Find places to stay" in promotionTitle:
-                    searchbar.send_keys("hotels rome italy")
-                    searchbar.submit()
-                elif "How's the economy?" in promotionTitle:
-                    searchbar.send_keys("sp 500")
-                    searchbar.submit()
-                elif "Who won?" in promotionTitle:
-                    searchbar.send_keys("braves score")
-                    searchbar.submit()
-                elif "Gaming time" in promotionTitle:
-                    searchbar.send_keys("vampire survivors video game")
+                    keys = "how cook pierogi"
+                    searchbar.send_keys(f"{keys}")
                     searchbar.submit()
                 elif promotion["promotionType"] == "urlreward":
                     # Complete search for URL reward
                     self.activities.completeSearch()
-                elif (
-                    promotion["promotionType"] == "quiz"
-                ):
+                elif (promotion["promotionType"] == "quiz"
+                    and promotion["pointProgress"] == 0):
                     # Complete different types of quizzes based on point progress max
                     if promotion["pointProgressMax"] == 10:
                         self.activities.completeABC()
@@ -106,19 +177,29 @@ class MorePromotions:
                     # Default to completing search
                     self.activities.completeSearch()
                 self.browser.webdriver.execute_script("window.scrollTo(0, 1080)")
-                time.sleep(random.randint(5, 10))
+                time.sleep(0.15)
+                logging.info(f"[IS_DOING]:{promotionTitle}")
+                #logging.info("Sending:   → "+f"{keys}"+" ←")
+                time.sleep(12)
+                pointsAfter = self.browser.utils.getAccountPoints()
+                time.sleep(0.35)
+                if pointsBefore != pointsAfter:
+                    pointsNow = self.browser.utils.getAccountPoints()
+                    pointsGot = pointsNow - pointsBefore
+                    logging.info(f"You have received {pointsGot} Points!"+" "+"Current Balance is now:"+" "+f"{pointsAfter}")
+                    if pointsGot == 3:
+                        logging.error(f"(3) Could not complete:   {promotionTitle}  - GO NEXT")
+                        return
+                    if pointsGot == 0:
+                        logging.error(f"(0) Can't complete Promotion!:   {promotionTitle}  - GO NEXT")
+                        return
+            except Exception:
 
-                self.browser.utils.resetTabs()
-                time.sleep(2)
-            except Exception:  # pylint: disable=broad-except
-                logging.error("[MORE PROMOS] Error More Promotions", exc_info=True)
-                # Reset tabs in case of an exception
+                time.sleep(0.1)
+                logging.error(f"(I) INCOMPLETE PROMOTION : {promotionTitle}  - GO NEXT")
+                logging.error("Can't complete Promotion!")
+                time.sleep(0.05)
                 self.browser.utils.resetTabs()
                 continue
-        incompletePromotions: list[tuple[str, str]] = []
-        for promotion in self.browser.utils.getDashboardData()["morePromotions"]:  # Have to refresh
-            if promotion["pointProgress"] < promotion["pointProgressMax"]:
-                incompletePromotions.append((promotion["title"], promotion["promotionType"]))
-        if incompletePromotions:
-            Utils.sendNotification("Incomplete promotions(s)", incompletePromotions)
-        logging.info("[MORE PROMOS] Exiting")
+
+        logging.info("EXIT PROMOS - GOING TO BING SEARCH!\n")
