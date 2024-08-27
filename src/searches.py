@@ -18,10 +18,7 @@ from src.browser import Browser
 from src.utils import Utils
 
 LOAD_DATE_KEY = "loadDate"
-with open("session_recall.txt", "r") as file:
-    allText = file.read()
-    words = list(map(str, allText.split()))
-    random.shuffle(words)
+
 
 class RetriesStrategy(Enum):
     EXPONENTIAL = auto()
