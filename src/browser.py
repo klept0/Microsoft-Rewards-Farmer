@@ -1,27 +1,34 @@
 import argparse
 import logging
 import random
-from pathlib import Path
-from types import TracebackType
-from typing import Any, Type
-
+import time
 import ipapi
 import seleniumwire.undetected_chromedriver as webdriver
 import undetected_chromedriver
+from pathlib import Path
+from types import TracebackType
+from typing import Any, Type, NamedTuple
+
+
 from ipapi.exceptions import RateLimited
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.chrome.webdriver import WebDriver
 
-from src import Account, RemainingSearches
+from src import Account
 from src.userAgentGenerator import GenerateUserAgent
 from src.utils import Utils
 
 
+class RemainingSearches(NamedTuple):
+    desktop: int
+    mobile: int
+
+    def getTotal(self) -> int:
+        return self.desktop + self.mobile
+
+
 class Browser:
-    """WebDriver wrapper class."""
-
     webdriver: undetected_chromedriver.Chrome
-
     def __init__(
         self, mobile: bool, account: Account, args: argparse.Namespace
     ) -> None:
@@ -32,9 +39,9 @@ class Browser:
         self.headless = not args.visible
         self.username = account.username
         self.password = account.password
-        self.totp = account.totp
         self.localeLang, self.localeGeo = self.getCCodeLang(args.lang, args.geo)
         self.proxy = None
+        time.sleep(0.2)
         if args.proxy:
             self.proxy = args.proxy
         elif account.proxy:
@@ -46,33 +53,35 @@ class Browser:
             self.userAgentMetadata,
             newBrowserConfig,
         ) = GenerateUserAgent().userAgent(self.browserConfig, mobile)
+        time.sleep(0.2)
         if newBrowserConfig:
             self.browserConfig = newBrowserConfig
             Utils.saveBrowserConfig(self.userDataDir, self.browserConfig)
+            time.sleep(0.2)
         self.webdriver = self.browserSetup()
+        time.sleep(0.2)
         self.utils = Utils(self.webdriver)
         logging.debug("out __init__")
+        time.sleep(0.1)
 
     def __enter__(self):
         logging.debug("in __enter__")
         return self
 
-    def __exit__(
-            self,
+    def __exit__(self,
             exc_type: Type[BaseException] | None,
             exc_value: BaseException | None,
-            traceback: TracebackType | None,
-    ):
+            traceback: TracebackType | None,):
+
         # Cleanup actions when exiting the browser context
-        logging.debug(
-            f"in __exit__ exc_type={exc_type} exc_value={exc_value} traceback={traceback}"
-        )
+        time.sleep(0.1)
+        logging.debug(f"in __exit__ exc_type={exc_type} exc_value={exc_value} traceback={traceback}")
         # turns out close is needed for undetected_chromedriver
         self.webdriver.close()
+        time.sleep(0.1)
         self.webdriver.quit()
 
-    def browserSetup(
-        self,
+    def browserSetup(self,
     ) -> undetected_chromedriver.Chrome:
         # Configure and setup the Chrome browser
         options = undetected_chromedriver.ChromeOptions()
@@ -87,10 +96,18 @@ class Browser:
         options.add_argument("--disable-extensions")
         options.add_argument("--dns-prefetch-disable")
         options.add_argument("--disable-gpu")
+        options.add_argument("--disable-software-rasterizer")# added not worked for msg
+        #options.add_argument("--disable-dev-shm-usage")# added not worked for msg
+        #options.add_argument("--single-process")# added not worked for msg (did problems)
+        #options.add_argument("--incognito")#added not worked for msg
         options.add_argument("--disable-default-apps")
         options.add_argument("--disable-features=Translate")
         options.add_argument("--disable-features=PrivacySandboxSettings4")
         options.add_argument("--disable-search-engine-choice-screen") #153
+        options.add_argument("--use-gl=desktop")#add
+        options.add_argument("--use-gl=swiftshader")#add
+
+
 
         seleniumwireOptions: dict[str, Any] = {"verify_ssl": False}
 
@@ -99,8 +116,7 @@ class Browser:
             seleniumwireOptions["proxy"] = {
                 "http": self.proxy,
                 "https": self.proxy,
-                "no_proxy": "localhost,127.0.0.1",
-            }
+                "no_proxy": "localhost,127.0.0.1",}
 
         # Obtain webdriver chrome driver version
         version = self.getChromeVersion()
@@ -110,8 +126,7 @@ class Browser:
             options=options,
             seleniumwire_options=seleniumwireOptions,
             user_data_dir=self.userDataDir.as_posix(),
-            version_main=major,
-        )
+            version_main=major,)
 
         seleniumLogger = logging.getLogger("seleniumwire")
         seleniumLogger.setLevel(logging.ERROR)
@@ -121,15 +136,12 @@ class Browser:
             deviceWidth = self.browserConfig["sizes"]["width"]
         else:
             if self.mobile:
-                deviceHeight = random.randint(568, 1024)
-                deviceWidth = random.randint(320, min(576, int(deviceHeight * 0.7)))
+                deviceHeight = random.randint(568, 800)
+                deviceWidth = random.randint(320, min(576, int(deviceHeight * 0.5)))
             else:
-                deviceWidth = random.randint(1024, 2560)
-                deviceHeight = random.randint(768, min(1440, int(deviceWidth * 0.8)))
-            self.browserConfig["sizes"] = {
-                "height": deviceHeight,
-                "width": deviceWidth,
-            }
+                deviceWidth = random.randint(800, 1220)
+                deviceHeight = random.randint(768, min(1220, int(deviceWidth * 1)))
+            self.browserConfig["sizes"] = {"height": deviceHeight,"width": deviceWidth,}
             Utils.saveBrowserConfig(self.userDataDir, self.browserConfig)
 
         if self.mobile:
@@ -143,16 +155,9 @@ class Browser:
         logging.info(f"Device size: {deviceWidth}x{deviceHeight}")
 
         if self.mobile:
-            driver.execute_cdp_cmd(
-                "Emulation.setTouchEmulationEnabled",
-                {
-                    "enabled": True,
-                },
-            )
+            driver.execute_cdp_cmd("Emulation.setTouchEmulationEnabled",{"enabled": True,},)
 
-        driver.execute_cdp_cmd(
-            "Emulation.setDeviceMetricsOverride",
-            {
+        driver.execute_cdp_cmd("Emulation.setDeviceMetricsOverride",{
                 "width": deviceWidth,
                 "height": deviceHeight,
                 "deviceScaleFactor": 0,
@@ -166,20 +171,12 @@ class Browser:
                     "y": 0,
                     "width": deviceWidth,
                     "height": deviceHeight,
-                    "scale": 1,
-                },
-            },
-        )
+                    "scale": 1,},},)
 
-        driver.execute_cdp_cmd(
-            "Emulation.setUserAgentOverride",
-            {
+        driver.execute_cdp_cmd("Emulation.setUserAgentOverride",{
                 "userAgent": self.userAgent,
                 "platform": self.userAgentMetadata["platform"],
-                "userAgentMetadata": self.userAgentMetadata,
-            },
-        )
-
+                "userAgentMetadata": self.userAgentMetadata,},)
         return driver
 
     def setupProfiles(self) -> Path:
@@ -219,17 +216,29 @@ class Browser:
         chrome_options = ChromeOptions()
         chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--dns-prefetch-disable")#added
+        chrome_options.add_argument("--disable-gpu")#added
+        chrome_options.add_argument("--disable-software-rasterizer")#added
+        chrome_options.add_argument("--disable-gpu-compositing")#added
+        chrome_options.add_argument("--blink-settings=imagesEnabled=false")#added
+        chrome_options.add_argument("--disable-default-apps")#added
+        chrome_options.add_argument("--disable-features=Translate")#added
+        chrome_options.add_argument("--disable-features=PrivacySandboxSettings4")#added
+        chrome_options.add_argument("--disable-search-engine-choice-screen") #added
+        chrome_options.add_argument("--ignore-certificate-errors")#added
+        chrome_options.add_argument("--ignore-certificate-errors-spki-list")#added
+        chrome_options.add_argument("--ignore-ssl-errors")#added
+        chrome_options.add_argument("--use-gl=desktop")#added2
+        chrome_options.add_argument("--use-gl=swiftshader")#added
+
         driver = WebDriver(options=chrome_options)
         version = driver.capabilities["browserVersion"]
-
+        time.sleep(0.1)
         driver.close()
         driver.quit()
-        # driver.__exit__(None, None, None)
-
         return version
 
-    def getRemainingSearches(
-            self, desktopAndMobile: bool = False
+    def getRemainingSearches(self, desktopAndMobile: bool = False
     ) -> RemainingSearches | int:
         dashboard = self.utils.getDashboardData()
         searchPoints = 1
