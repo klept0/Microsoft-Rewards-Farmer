@@ -25,7 +25,7 @@ from urllib3 import Retry
 from .constants import REWARDS_URL
 from .constants import SEARCH_URL
 
-
+ 
 class Utils:
     args: Namespace
 
