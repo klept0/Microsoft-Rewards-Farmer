@@ -42,53 +42,35 @@ class Utils:
         return Path(__file__).parent.parent
 
     @staticmethod
-    def loadConfig(configFilename="config.yaml") -> dict:
-        configFile = Utils.getProjectRoot() / configFilename
-        try:
-            with open(configFile, "r") as file:
-                config = yaml.safe_load(file)
-                if not config:
-                    logging.info(f"{file} doesn't exist")
-                    return {}
-                return config
-        except OSError:
-            logging.warning(f"{configFilename} doesn't exist")
-            return {}
+    def loadConfig(config_file=getProjectRoot() / "config.yaml") -> dict:
+        with open(config_file, "r") as file:
+            return yaml.safe_load(file)
 
     @staticmethod
     def sendNotification(title, body) -> None:
         if Utils.args.disable_apprise:
             return
+
         apprise = Apprise()
-        urls: list[str] = Utils.loadConfig("config-private.yaml").get("apprise", {}).get("urls", [])
-        if not urls:
-            logging.debug("No urls found, not sending notification")
-            return
+        urls: list[str] = Utils.loadConfig().get("apprise", {}).get("urls", [])
         for url in urls:
             apprise.add(url)
-        assert apprise.notify(title=str(title), body=str(body))
+        apprise.notify(body=body, title=title)
 
-    def waitUntilVisible(
-        self, by: str, selector: str, timeToWait: float = 10
-    ) -> WebElement:
-        return WebDriverWait(self.webdriver, timeToWait).until(
-            expected_conditions.visibility_of_element_located((by, selector))
-        )
+    def waitUntilVisible(self, by: str, selector: str, timeToWait: float = 8) -> WebElement:
+        return WebDriverWait(self.webdriver, timeToWait).until(expected_conditions.visibility_of_element_located((by, selector)))
 
     def waitUntilClickable(
-        self, by: str, selector: str, timeToWait: float = 10
-    ) -> WebElement:
-        return WebDriverWait(self.webdriver, timeToWait).until(
-            expected_conditions.element_to_be_clickable((by, selector))
-        )
+        self, by: str, selector: str, timeToWait: float = 8) -> WebElement:
+        return WebDriverWait(self.webdriver, timeToWait).until(expected_conditions.element_to_be_clickable((by, selector)))
 
-    def checkIfTextPresentAfterDelay(self, text: str, timeToWait: float = 10) -> bool:
+    def checkIfTextPresentAfterDelay(self, text: str, timeToWait: float = 8) -> bool:
         time.sleep(timeToWait)
         text_found = re.search(text, self.webdriver.page_source)
         return text_found is not None
 
     def waitUntilQuestionRefresh(self) -> WebElement:
-        return self.waitUntilVisible(By.CLASS_NAME, "rqECredits", timeToWait=20)
+        return self.waitUntilVisible(By.CLASS_NAME, "rqECredits", timeToWait=12)
 
     def waitUntilQuizLoads(self) -> WebElement:
         return self.waitUntilVisible(By.XPATH, '//*[@id="rqStartQuiz"]')
@@ -99,19 +81,17 @@ class Utils:
         for handle in self.webdriver.window_handles:
             if handle != curr:
                 self.webdriver.switch_to.window(handle)
-                time.sleep(0.5)
+                time.sleep(0.05)
                 self.webdriver.close()
-                time.sleep(0.5)
+                time.sleep(0.05)
 
         self.webdriver.switch_to.window(curr)
-        time.sleep(0.5)
+        time.sleep(0.05)
         self.goToRewards()
 
     def goToRewards(self) -> None:
         self.webdriver.get(REWARDS_URL)
-        assert (
-            self.webdriver.current_url == REWARDS_URL
-        ), f"{self.webdriver.current_url} {REWARDS_URL}"
+        assert (self.webdriver.current_url == REWARDS_URL), f"{self.webdriver.current_url} {REWARDS_URL}"
 
     def goToSearch(self) -> None:
         self.webdriver.get(SEARCH_URL)
@@ -138,19 +118,15 @@ class Utils:
 
     def getBingInfo(self) -> Any:
         session = self.makeRequestsSession()
-
         for cookie in self.webdriver.get_cookies():
             session.cookies.set(cookie["name"], cookie["value"])
-
         response = session.get("https://www.bing.com/rewards/panelflyout/getuserinfo")
-
         assert response.status_code == requests.codes.ok
         return response.json()["userInfo"]
-
     @staticmethod
     def makeRequestsSession(session: Session = requests.session()) -> Session:
         retry = Retry(
-            total=5, backoff_factor=1, status_forcelist=[500, 502, 503, 504]
+            total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504]
         )
         session.mount(
             "https://", HTTPAdapter(max_retries=retry)
@@ -163,12 +139,9 @@ class Utils:
     def isLoggedIn(self) -> bool:
         # return self.getBingInfo()["isRewardsUser"]  # todo For some reason doesn't work, but doesn't involve changing url so preferred
         self.webdriver.get(
-            "https://rewards.bing.com/Signin/"
-        )  # changed site to allow bypassing when M$ blocks access to login.live.com randomly
+            "https://rewards.bing.com/Signin/")  # changed site to allow bypassing when M$ blocks access to login.live.com randomly
         with contextlib.suppress(TimeoutException):
-            self.waitUntilVisible(
-                By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 10
-            )
+            self.waitUntilVisible(By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]',5)
             return True
         return False
 
@@ -212,16 +185,19 @@ class Utils:
         with contextlib.suppress(NoSuchElementException, ElementNotInteractableException):  # Expected
             self.webdriver.find_element(By.ID, "bnp_btn_accept").click()
 
-    def switchToNewTab(self, timeToWait: float = 0) -> None:
+    def switchToNewTab(self, timeToWait: float = 0.35) -> None:
+        time.sleep(0.25)
         self.webdriver.switch_to.window(window_name=self.webdriver.window_handles[1])
+        if timeToWait > 0:
+            time.sleep(timeToWait)
 
     def closeCurrentTab(self) -> None:
         self.webdriver.close()
-        time.sleep(0.5)
+        time.sleep(0.05)
         self.webdriver.switch_to.window(window_name=self.webdriver.window_handles[0])
-        time.sleep(0.5)
+        time.sleep(0.05)
 
-    def visitNewTab(self, timeToWait: float = 0) -> None:
+    def visitNewTab(self, timeToWait: float = 0.25) -> None:
         self.switchToNewTab(timeToWait)
         self.closeCurrentTab()
 
@@ -248,6 +224,7 @@ class Utils:
     def click(self, element: WebElement) -> None:
         try:
             element.click()
-        except (ElementClickInterceptedException, ElementNotInteractableException):
+        except ElementClickInterceptedException:
             self.tryDismissAllMessages()
             element.click()
+
