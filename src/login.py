@@ -24,7 +24,7 @@ class Login:
         try:
             if element.is_displayed() and element.is_enabled():
                 element.click()
-                logging.critical(f"This Account is Locked! or half banned?!")
+                logging.critical(f"This Account is Locked!")
                 self.webdriver.close()
                 self.webdriver.quit()
             else:
