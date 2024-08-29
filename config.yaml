@@ -1,7 +1,0 @@
-# config.yaml
-apprise:
-  summary: NEVER
-retries:
-  base_delay_in_seconds: 30
-  max: 3
-  strategy: EXPONENTIAL
