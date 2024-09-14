@@ -168,26 +168,34 @@ class Searches:
 
             searchbar: WebElement
             for _ in range(1000):
-                searchbar = self.browser.utils.waitUntilClickable(
-                    By.ID, "sb_form_q", timeToWait=40
-                )
-                searchbar.clear()
-                term = next(termsCycle)
-                logging.debug(f"term={term}")
-                time.sleep(1)
-                searchbar.send_keys(term)
-                time.sleep(1)
-                with contextlib.suppress(TimeoutException):
+                try:
+                    # It waits to get clickable
+                    searchbar = self.browser.utils.waitUntilClickable(
+                        By.ID, "sb_form_q", timeToWait=40
+                    )
+                    searchbar.clear()
+
+                    # pick the next term
+                    term = next(termsCycle)
+                    logging.debug(f"term={term}")
+
+                    # send term
+                    searchbar.send_keys(term)
+
+                    # wait that term get submitted
                     WebDriverWait(self.webdriver, 20).until(
                         expected_conditions.text_to_be_present_in_element_value(
                             (By.ID, "sb_form_q"), term
                         )
                     )
-                    break
-                logging.debug("error send_keys")
-            else:
-                # todo Still happens occasionally, gotta be a fix
-                raise TimeoutException
+                    break  # exit if works
+                except TimeoutException:
+                    logging.debug(
+                        "Timeout while trying to send keys, moving to next term"
+                    )
+                    continue  # with that error he continues
+
+            # Submit search
             searchbar.submit()
 
             pointsAfter = self.browser.utils.getAccountPoints()

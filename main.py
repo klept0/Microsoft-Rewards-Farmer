@@ -106,7 +106,7 @@ def setupLogging():
         }
     )
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,  # change it if you want to debug for more details
         format=_format,
         handlers=[
             handlers.TimedRotatingFileHandler(
