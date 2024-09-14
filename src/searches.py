@@ -193,6 +193,9 @@ class Searches:
                     logging.debug(
                         "Timeout while trying to send keys, moving to next term"
                     )
+                    # if it goes out from searches it comes back
+                    self.browser.utils.goToSearch()
+
                     continue  # with that error he continues
 
             # Submit search
