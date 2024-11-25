@@ -13,6 +13,7 @@ from src.utils import CONFIG, sendNotification, getAnswerCode
 
 # todo These are US-English specific, maybe there's a good way to internationalize
 ACTIVITY_TITLE_TO_SEARCH = {
+    "Black Friday shopping": "black friday deals",
     "Discover open job roles": "jobs at microsoft",
     "Expand your vocabulary": "define demure",
     "Find places to stay": "hotels rome italy",
@@ -31,6 +32,7 @@ ACTIVITY_TITLE_TO_SEARCH = {
     "Too tired to cook tonight?": "Pizza Hut near me",
     "Translate anything": "translate pencil sharpener to spanish",
     "What time is it?": "china time",
+    "What's for Thanksgiving dinner?": "pumpkin pie recipe",
     "Who won?": "braves score",
     "You can track your package": "usps tracking",
 }
