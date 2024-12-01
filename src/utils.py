@@ -37,6 +37,7 @@ DEFAULT_CONFIG: MappingProxyType = MappingProxyType(
             "notify": {
                 "incomplete-activity": {"enabled": True, "ignore-safeguard-info": True},
                 "uncaught-exception": {"enabled": True},
+                "login-code": {"enabled": True},
             },
             "summary": "ON_ERROR",
         },

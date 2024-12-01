@@ -13,7 +13,7 @@ from selenium.webdriver.common.by import By
 from undetected_chromedriver import Chrome
 
 from src.browser import Browser
-from src.utils import sendNotification
+from src.utils import sendNotification, CONFIG
 
 
 class Login:
@@ -102,8 +102,14 @@ class Login:
                 "[LOGIN] Confirm your login with code %s on your phone (you have one minute)!\a",
                 codeField.text,
             )
-            sendNotification(
-                f"Confirm your login on your phone", f"Code: {codeField.text} (expires in 1 minute)")
+            if (
+                    CONFIG.get("apprise")
+                            .get("notify")
+                            .get("login-code")
+                            .get("enabled")
+            ):
+                sendNotification(
+                    f"Confirm your login on your phone", f"Code: {codeField.text} (expires in 1 minute)")
             self.utils.waitUntilVisible(By.NAME, "kmsiForm", 60)
             logging.info("[LOGIN] Successfully verified!")
         else:
@@ -143,8 +149,14 @@ class Login:
                     " one minute)!\a",
                     codeField.text,
                 )
-                sendNotification(
-                    f"Confirm your login on your phone", f"Code: {codeField.text} (expires in 1 minute)")
+                if (
+                        CONFIG.get("apprise")
+                                .get("notify")
+                                .get("login-code")
+                                .get("enabled")
+                ):
+                    sendNotification(
+                        f"Confirm your login on your phone", f"Code: {codeField.text} (expires in 1 minute)")
                 self.utils.waitUntilVisible(By.NAME, "kmsiForm", 60)
                 logging.info("[LOGIN] Successfully verified!")
 
