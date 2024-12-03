@@ -153,8 +153,8 @@ class GenerateUserAgent:
                 (
                     release
                     for release in releases
-                    if release["Platform"] == "Windows"
-                    and release["Architecture"] == "x64"
+                    if release["platform"] == "Windows"
+                    and release["architecture"] == "x64"
                 ),
                 None,
             )
