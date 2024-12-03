@@ -37,6 +37,12 @@ ACTIVITY_TITLE_TO_SEARCH = {
     "You can track your package": "usps tracking",
 }
 
+ACTIVITY_TITLE_TO_IGNORE = [
+    "Safeguard your family's info",
+    "Get 50 entries plus 1000 points!",
+    "Recevez 50 participations et 1000 points !",
+]
+
 
 class Activities:
     def __init__(self, browser: Browser):
@@ -176,8 +182,8 @@ class Activities:
             if activity["complete"] is True or activity["pointProgressMax"] == 0:
                 logging.debug("Already done, returning")
                 return
-            if "Safeguard your family's info" == activityTitle:
-                logging.debug("Skipping Safeguard your family's info")
+            if activityTitle in ACTIVITY_TITLE_TO_IGNORE:
+                logging.debug("Skipping " + activityTitle)
                 return
             # Open the activity for the activity
             cardId = activities.index(activity)
