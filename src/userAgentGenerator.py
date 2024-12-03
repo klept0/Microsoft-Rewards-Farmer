@@ -144,9 +144,9 @@ class GenerateUserAgent:
             (product for product in data if product["product"] == "Stable"),
             None,
         ):
-            releases = stableProduct["Releases"]
+            releases = stableProduct["releases"]
             androidRelease = next(
-                (release for release in releases if release["Platform"] == "Android"),
+                (release for release in releases if release["platform"] == "Android"),
                 None,
             )
             windowsRelease = next(
@@ -160,8 +160,8 @@ class GenerateUserAgent:
             )
             if androidRelease and windowsRelease:
                 return (
-                    windowsRelease["ProductVersion"],
-                    androidRelease["ProductVersion"],
+                    windowsRelease["productVersion"],
+                    androidRelease["productVersion"],
                 )
         raise HTTPError("Failed to get Edge versions.")
 
