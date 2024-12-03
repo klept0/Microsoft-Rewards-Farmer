@@ -141,7 +141,7 @@ class GenerateUserAgent:
         )
         data = response.json()
         if stableProduct := next(
-            (product for product in data if product["Product"] == "Stable"),
+            (product for product in data if product["product"] == "Stable"),
             None,
         ):
             releases = stableProduct["Releases"]
