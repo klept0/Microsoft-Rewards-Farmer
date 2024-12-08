@@ -19,7 +19,7 @@ from selenium.webdriver.common.by import By
 
 from src import Account, RemainingSearches
 from src.userAgentGenerator import GenerateUserAgent
-from src.utils import Utils, CONFIG, saveBrowserConfig, getProjectRoot, getBrowserConfig
+from src.utils import CONFIG, Utils, getBrowserConfig, getProjectRoot, saveBrowserConfig
 
 
 class Browser:
@@ -102,7 +102,7 @@ class Browser:
         options.add_argument("--disable-features=PrivacySandboxSettings4")
         options.add_argument("--disable-http2")
         options.add_argument("--disable-search-engine-choice-screen")  # 153
-        options.page_load_strategy = 'eager'
+        options.page_load_strategy = "eager"
 
         seleniumwireOptions: dict[str, Any] = {"verify_ssl": False}
 
@@ -223,19 +223,22 @@ class Browser:
     @staticmethod
     def getLanguageCountry(language: str, country: str) -> tuple[str, str]:
         if not country:
-            country = CONFIG.get("default").get("location")
+            country = CONFIG.get("default").get("geolocation")
+
+        if not language:
+            country = CONFIG.get("default").get("language")
 
         if not language or not country:
             currentLocale = locale.getlocale()
             if not language:
                 with contextlib.suppress(ValueError):
                     language = pycountry.languages.get(
-                        name=currentLocale[0].split("_")[0]
+                        alpha_2=currentLocale[0].split("_")[0]
                     ).alpha_2
             if not country:
                 with contextlib.suppress(ValueError):
                     country = pycountry.countries.get(
-                        name=currentLocale[0].split("_")[1]
+                        alpha_2=currentLocale[0].split("_")[1]
                     ).alpha_2
 
         if not language or not country:
