@@ -158,7 +158,6 @@ class Activities:
             self.browser.utils.click(answerToClick)
             sleep(randint(10, 15))
 
-
     def getAnswerAndCode(self, answerId: str) -> tuple[WebElement, str]:
         # Helper function to get answer element and its code
         answerEncodeKey = self.webdriver.execute_script("return _G.IG")
@@ -176,12 +175,17 @@ class Activities:
             if activity["complete"] is True or activity["pointProgressMax"] == 0:
                 logging.debug("Already done, returning")
                 return
-            if "Safeguard your family's info" == activityTitle:
-                logging.debug("Skipping Safeguard your family's info")
+            if activityTitle in CONFIG.get("apprise").get("notify").get(
+                "incomplete-activity"
+            ).get("ignore"):
+                logging.debug(f"Ignoring {activityTitle}")
                 return
             # Open the activity for the activity
             cardId = activities.index(activity)
-            isDailySet = "daily_set_date" in activity["attributes"] and activity["attributes"]["daily_set_date"]
+            isDailySet = (
+                "daily_set_date" in activity["attributes"]
+                and activity["attributes"]["daily_set_date"]
+            )
             if isDailySet:
                 self.openDailySetActivity(cardId)
             else:
@@ -251,13 +255,13 @@ class Activities:
                         activity["pointProgress"],
                         activity["pointProgressMax"],
                     )
-            if (
+            for incompleteActivityToIgnore in (
                 CONFIG.get("apprise")
                 .get("notify")
                 .get("incomplete-activity")
-                .get("ignore-safeguard-info")
+                .get("ignore")
             ):
-                incompleteActivities.pop("Safeguard your family's info", None)
+                incompleteActivities.pop(incompleteActivityToIgnore, None)
             if incompleteActivities:
                 logging.info(f"incompleteActivities: {incompleteActivities}")
                 sendNotification(

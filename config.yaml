@@ -3,7 +3,9 @@ apprise:
   notify:
     incomplete-activity:
       enabled: True # True or False
-      ignore-safeguard-info: True
+      ignore:
+        - Get 50 entries plus 1000 points!
+        - Safeguard your family's info
     uncaught-exception:
       enabled: True # True or False
     login-code:

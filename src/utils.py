@@ -35,7 +35,13 @@ DEFAULT_CONFIG: MappingProxyType = MappingProxyType(
     {
         "apprise": {
             "notify": {
-                "incomplete-activity": {"enabled": True, "ignore-safeguard-info": True},
+                "incomplete-activity": {
+                    "enabled": True,
+                    "ignore": [
+                        "Get 50 entries plus 1000 points!",
+                        "Safeguard your family's info",
+                    ],
+                },
                 "uncaught-exception": {"enabled": True},
                 "login-code": {"enabled": True},
             },
