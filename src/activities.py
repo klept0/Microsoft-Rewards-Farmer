@@ -181,7 +181,7 @@ class Activities:
                 return
             # Open the activity for the activity
             cardId = activities.index(activity)
-            isDailySet = "daily_set_date" in activity["attributes"]
+            isDailySet = "daily_set_date" in activity["attributes"] and activity["attributes"]["daily_set_date"]
             if isDailySet:
                 self.openDailySetActivity(cardId)
             else:
