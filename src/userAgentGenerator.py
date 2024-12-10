@@ -139,29 +139,45 @@ class GenerateUserAgent:
         response = self.getWebdriverPage(
             "https://edgeupdates.microsoft.com/api/products"
         )
+
+        def get_value_ignore_case(data: dict, key: str) -> Any:
+            """Get the value from a dictionary ignoring the case of the first letter of the key."""
+            for k, v in data.items():
+                if k.lower() == key.lower():
+                    return v
+            return None
+
         data = response.json()
         if stableProduct := next(
-            (product for product in data if product["product"] == "Stable"),
+            (
+                product
+                for product in data
+                if get_value_ignore_case(product, "product") == "Stable"
+            ),
             None,
         ):
-            releases = stableProduct["releases"]
+            releases = get_value_ignore_case(stableProduct, "releases")
             androidRelease = next(
-                (release for release in releases if release["platform"] == "Android"),
+                (
+                    release
+                    for release in releases
+                    if get_value_ignore_case(release, "platform") == "Android"
+                ),
                 None,
             )
             windowsRelease = next(
                 (
                     release
                     for release in releases
-                    if release["platform"] == "Windows"
-                    and release["architecture"] == "x64"
+                    if get_value_ignore_case(release, "platform") == "Windows"
+                    and get_value_ignore_case(release, "architecture") == "x64"
                 ),
                 None,
             )
             if androidRelease and windowsRelease:
                 return (
-                    windowsRelease["productVersion"],
-                    androidRelease["productVersion"],
+                    get_value_ignore_case(windowsRelease, "productVersion"),
+                    get_value_ignore_case(androidRelease, "productVersion"),
                 )
         raise HTTPError("Failed to get Edge versions.")
 

@@ -16,10 +16,10 @@ from apprise import Apprise
 from requests import Session
 from requests.adapters import HTTPAdapter
 from selenium.common import (
-    NoSuchElementException,
-    TimeoutException,
     ElementClickInterceptedException,
     ElementNotInteractableException,
+    NoSuchElementException,
+    TimeoutException,
 )
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
@@ -28,8 +28,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from urllib3 import Retry
 
-from .constants import REWARDS_URL
-from .constants import SEARCH_URL
+from .constants import REWARDS_URL, SEARCH_URL
 
 DEFAULT_CONFIG: MappingProxyType = MappingProxyType(
     {
@@ -277,7 +276,7 @@ def sendNotification(title: str, body: str, e: Exception = None) -> None:
         return
     for url in urls:
         apprise.add(url)
-    assert apprise.notify(title=str(title), body=str(body))
+    # assert apprise.notify(title=str(title), body=str(body)) # not work for telegram
 
 
 def getAnswerCode(key: str, string: str) -> str:
