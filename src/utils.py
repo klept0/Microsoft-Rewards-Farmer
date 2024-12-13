@@ -3,6 +3,7 @@ import json
 import locale as pylocale
 import logging
 import re
+import ssl
 import time
 from argparse import Namespace
 from datetime import date
@@ -10,6 +11,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
+import certifi
 import requests
 import yaml
 from apprise import Apprise
@@ -27,6 +29,10 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from urllib3 import Retry
+
+ssl._create_default_https_context = lambda: ssl.create_default_context(
+    cafile=certifi.where()
+)
 
 from .constants import REWARDS_URL, SEARCH_URL
 
