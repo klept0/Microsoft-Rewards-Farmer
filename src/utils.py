@@ -252,7 +252,7 @@ def loadConfig(
     try:
         return MappingProxyType(defaultConfig | loadYaml(configFile))
     except OSError:
-        logging.info(f"{configFile} doesn't exist, returning defaults")
+        print(f"{configFile} doesn't exist, returning defaults")
         return defaultConfig
 
 
