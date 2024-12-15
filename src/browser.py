@@ -226,7 +226,7 @@ class Browser:
             country = CONFIG.get("default").get("geolocation")
 
         if not language:
-            country = CONFIG.get("default").get("language")
+            language = CONFIG.get("default").get("language")
 
         if not language or not country:
             currentLocale = locale.getlocale()
