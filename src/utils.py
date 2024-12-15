@@ -304,15 +304,25 @@ def saveBrowserConfig(sessionPath: Path, config: dict) -> None:
 
 
 def makeRequestsSession(session: Session = requests.session()) -> Session:
+    retries_config = CONFIG.get("retries", {})
+    base_delay = retries_config.get("base_delay_in_seconds", 120)
+    max_retries = retries_config.get("max", 4)
+    strategy = retries_config.get("strategy", "EXPONENTIAL")
+
+    if strategy == "EXPONENTIAL":
+        backoff_factor = base_delay / (2**max_retries)
+    else:
+        backoff_factor = base_delay
+
     retry = Retry(
-        total=5,
-        backoff_factor=1,
+        total=max_retries,
+        backoff_factor=backoff_factor,
         status_forcelist=[
             500,
             502,
             503,
             504,
-        ],  # todo Use global retries from config
+        ],
     )
     session.mount(
         "https://", HTTPAdapter(max_retries=retry)

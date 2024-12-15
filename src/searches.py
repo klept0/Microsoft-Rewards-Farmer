@@ -5,7 +5,7 @@ import shelve
 from datetime import date, timedelta
 from enum import Enum, auto
 from itertools import cycle
-from random import random, randint, shuffle
+from random import randint, random, shuffle
 from time import sleep
 from typing import Final
 
@@ -13,7 +13,7 @@ import requests
 from selenium.webdriver.common.by import By
 
 from src.browser import Browser
-from src.utils import CONFIG, makeRequestsSession, getProjectRoot
+from src.utils import CONFIG, getProjectRoot, makeRequestsSession
 
 
 class RetriesStrategy(Enum):
@@ -68,9 +68,10 @@ class Searches:
                 f"https://trends.google.com/trends/api/dailytrends?hl={self.browser.localeLang}"
                 f'&ed={(date.today() - timedelta(days=i)).strftime("%Y%m%d")}&geo={self.browser.localeGeo}&ns=15'
             )
-            assert (
-                r.status_code == requests.codes.ok
-            ), "Adjust retry config in src.utils.Utils.makeRequestsSession"
+            assert r.status_code == requests.codes.ok, (
+                "Adjust retry config in src.utils.Utils.makeRequestsSession"
+                + f"\n******\nstatus_code={r.status_code}, requests.codes.ok={requests.codes.ok}\n******\n"
+            )
             trends = json.loads(r.text[6:])
             for topic in trends["default"]["trendingSearchesDays"][0][
                 "trendingSearches"
