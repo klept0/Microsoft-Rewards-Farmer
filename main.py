@@ -11,26 +11,20 @@ import traceback
 from datetime import datetime
 from enum import Enum, auto
 
-from src import (
-    Browser,
-    Login,
-    PunchCards,
-    Searches,
-    ReadToEarn,
-    Account,
-)
+from src import Account, Browser, Login, PunchCards, ReadToEarn, Searches
 from src.activities import Activities
 from src.browser import RemainingSearches
 from src.loggingColoredFormatter import ColoredFormatter
-from src.utils import Utils, CONFIG, sendNotification, getProjectRoot, formatNumber
+from src.utils import CONFIG, Utils, formatNumber, getProjectRoot, sendNotification
 
 
-def main():
+def main(accounts=None):
     args = argumentParser()
     Utils.args = args
     setupLogging()
-    loadedAccounts = setupAccounts()
-
+    loadedAccounts = (
+        setupAccounts(account_idx=args.account_idx) if accounts is None else accounts
+    )
     # Load previous day's points data
     previous_points_data = load_previous_points_data()
 
@@ -164,10 +158,22 @@ def argumentParser() -> argparse.Namespace:
         default=None,
         help="Optional: Set to only search in either desktop or mobile (ex: 'desktop' or 'mobile')",
     )
+    parser.add_argument(
+        "-acc",
+        "--account-idx",
+        type=lambda s: [int(item) for item in s.split(",")],
+        help="Optional: Index of the account to run, can be a comma-separated list of indexes",
+    )
+    parser.add_argument(
+        "-so",
+        "--search-only",
+        action="store_true",
+        help="Optional: Index of the account to run, can be a comma-separated list of indexes",
+    )
     return parser.parse_args()
 
 
-def setupAccounts() -> list[Account]:
+def setupAccounts(account_idx=None) -> list[Account]:
     """Sets up and validates a list of accounts loaded from 'accounts.json'."""
 
     def validEmail(email: str) -> bool:
@@ -198,7 +204,16 @@ def setupAccounts() -> list[Account]:
             )
             continue
         loadedAccounts.append(account)
-    random.shuffle(loadedAccounts)
+    # random.shuffle(loadedAccounts)
+    if account_idx is not None:
+        if isinstance(account_idx, int):
+            account_idx = [account_idx]
+        elif isinstance(account_idx, list):
+            pass
+        else:
+            raise ValueError("account_idx must be an int or a list of ints")
+        account_idx = list(set(account_idx))
+        loadedAccounts = [loadedAccounts[idx] for idx in account_idx]
     return loadedAccounts
 
 
@@ -238,8 +253,9 @@ def executeBot(currentAccount: Account, args: argparse.Namespace):
             logging.info(
                 f"[POINTS] You have {formatNumber(startingPoints)} points on your account"
             )
-            Activities(desktopBrowser).completeActivities()
-            PunchCards(desktopBrowser).completePunchCards()
+            if not args.search_only:
+                Activities(desktopBrowser).completeActivities()
+                PunchCards(desktopBrowser).completePunchCards()
             # VersusGame(desktopBrowser).completeVersusGame()
 
             with Searches(desktopBrowser) as searches:
