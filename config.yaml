@@ -10,7 +10,7 @@ apprise:
       enabled: True # True or False
     login-code:
       enabled: True # True or False
-  summary: ON_ERROR
+  summary: ALWAYS # Options: ON_ERROR, ALWAYS, NEVER
 default:
   geolocation: US # Replace with your country code https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
   language: en # Replace with your language code https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
