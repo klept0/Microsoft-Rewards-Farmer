@@ -350,3 +350,4 @@ if __name__ == "__main__":
         sendNotification(
             "⚠️ Error occurred, please check the log", traceback.format_exc(), e
         )
+        exit(1)
