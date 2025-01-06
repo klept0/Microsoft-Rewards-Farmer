@@ -252,7 +252,7 @@ def loadConfig(
     try:
         return MappingProxyType(defaultConfig | loadYaml(configFile))
     except OSError:
-        logging.info(f"{configFile} doesn't exist, returning defaults")
+        print(f"{configFile} doesn't exist, returning defaults")
         return defaultConfig
 
 
@@ -276,7 +276,8 @@ def sendNotification(title: str, body: str, e: Exception = None) -> None:
         return
     for url in urls:
         apprise.add(url)
-    # assert apprise.notify(title=str(title), body=str(body)) # not work for telegram
+    # assert apprise.notify(title=str(title), body=str(body))  # TODO not work for telegram
+    apprise.notify(title=str(title), body=str(body))
 
 
 def getAnswerCode(key: str, string: str) -> str:
@@ -304,15 +305,25 @@ def saveBrowserConfig(sessionPath: Path, config: dict) -> None:
 
 
 def makeRequestsSession(session: Session = requests.session()) -> Session:
+    retries_config = CONFIG.get("retries", {})
+    base_delay = retries_config.get("base_delay_in_seconds", 120)
+    max_retries = retries_config.get("max", 4)
+    strategy = retries_config.get("strategy", "EXPONENTIAL")
+
+    if strategy == "EXPONENTIAL":
+        backoff_factor = base_delay / (2**max_retries)
+    else:
+        backoff_factor = base_delay
+
     retry = Retry(
-        total=5,
-        backoff_factor=1,
+        total=max_retries,
+        backoff_factor=backoff_factor,
         status_forcelist=[
             500,
             502,
             503,
             504,
-        ],  # todo Use global retries from config
+        ],
     )
     session.mount(
         "https://", HTTPAdapter(max_retries=retry)
