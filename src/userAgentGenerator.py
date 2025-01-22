@@ -140,7 +140,7 @@ class GenerateUserAgent:
             "https://edgeupdates.microsoft.com/api/products"
         )
 
-        def get_value_ignore_case(data: dict, key: str) -> Any:
+        def getValueIgnoreCase(data: dict, key: str) -> Any:
             """Get the value from a dictionary ignoring the case of the first letter of the key."""
             for k, v in data.items():
                 if k.lower() == key.lower():
@@ -152,16 +152,16 @@ class GenerateUserAgent:
             (
                 product
                 for product in data
-                if get_value_ignore_case(product, "product") == "Stable"
+                if getValueIgnoreCase(product, "product") == "Stable"
             ),
             None,
         ):
-            releases = get_value_ignore_case(stableProduct, "releases")
+            releases = getValueIgnoreCase(stableProduct, "releases")
             androidRelease = next(
                 (
                     release
                     for release in releases
-                    if get_value_ignore_case(release, "platform") == "Android"
+                    if getValueIgnoreCase(release, "platform") == "Android"
                 ),
                 None,
             )
@@ -169,15 +169,15 @@ class GenerateUserAgent:
                 (
                     release
                     for release in releases
-                    if get_value_ignore_case(release, "platform") == "Windows"
-                    and get_value_ignore_case(release, "architecture") == "x64"
+                    if getValueIgnoreCase(release, "platform") == "Windows"
+                    and getValueIgnoreCase(release, "architecture") == "x64"
                 ),
                 None,
             )
             if androidRelease and windowsRelease:
                 return (
-                    get_value_ignore_case(windowsRelease, "productVersion"),
-                    get_value_ignore_case(androidRelease, "productVersion"),
+                    getValueIgnoreCase(windowsRelease, "productVersion"),
+                    getValueIgnoreCase(androidRelease, "productVersion"),
                 )
         raise HTTPError("Failed to get Edge versions.")
 

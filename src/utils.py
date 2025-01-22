@@ -626,7 +626,7 @@ def sendNotification(title: str, body: str, e: Exception = None) -> None:
         return
     for url in urls:
         apprise.add(url)
-    # assert apprise.notify(title=str(title), body=str(body)) # not work for telegram
+    assert apprise.notify(title=str(title), body=str(body))
 
 
 def getAnswerCode(key: str, string: str) -> str:
