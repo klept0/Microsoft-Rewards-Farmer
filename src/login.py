@@ -2,43 +2,117 @@ import argparse
 import contextlib
 import logging
 from argparse import Namespace
-
+import time
 from pyotp import TOTP
 from selenium.common import TimeoutException
+from selenium.common.exceptions import (
+    ElementNotInteractableException,
+    NoSuchElementException,
+)
 from selenium.webdriver.common.by import By
 from undetected_chromedriver import Chrome
 
 from src.browser import Browser
+from src.utils import sendNotification, CONFIG
+from urllib3.exceptions import MaxRetryError
 
+
+
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 class Login:
     browser: Browser
-    args: Namespace
     webdriver: Chrome
 
-    def __init__(self, browser: Browser, args: argparse.Namespace):
+    def __init__(self, browser: Browser):
         self.browser = browser
         self.webdriver = browser.webdriver
         self.utils = browser.utils
-        self.args = args
 
-    def login(self) -> None:
-        if self.utils.isLoggedIn():
-            logging.info("[LOGIN] Already logged-in")
-        else:
-            logging.info("[LOGIN] Logging-in...")
-            self.executeLogin()
-            logging.info("[LOGIN] Logged-in successfully !")
+    def check_locked_user(self):
+        try:
+            element = self.webdriver.find_element(By.XPATH, "//div[@id='serviceAbuseLandingTitle']")
+            self.locked(element)
+        except NoSuchElementException:
+            return
 
-        assert self.utils.isLoggedIn()
+    def check_banned_user(self):
+        try:
+            WebDriverWait(self.webdriver, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+            element = self.webdriver.find_element(By.XPATH, '//*[@id="fraudErrorBody"]')
+            if element.is_displayed():
+                self.banned(element)
+                return False
+        except NoSuchElementException:
+            return True
+        except TimeoutException:
+            logging.warning("[BANNED CHECK] Seite hat zu lange geladen, erneut prüfen.")
+            return self.check_banned_user()  # Rekursiver Versuch, falls die Seite hängt
+    
 
-    def executeLogin(self) -> None:
+    def locked(self, element):
+        try:
+            if element.is_displayed():
+                logging.critical("This Account is Locked!")
+                self.quit_browser()
+                raise Exception("Account locked, moving to the next account.")
+        except (ElementNotInteractableException, NoSuchElementException):
+            pass
+
+    def banned(self, element):
+        try:
+            if element.is_displayed():
+                logging.critical("This Account is Banned! Skipping...")
+
+                if self.webdriver:
+                    try:
+                        self.webdriver.quit()
+                    except Exception as e:
+                        logging.warning(f"Error closing webdriver: {e}")
+
+                raise Exception("Account banned, skipping to the next account.")
+        except (ElementNotInteractableException, NoSuchElementException):
+            return  
+
+    def quit_browser(self):
+        try:
+            if self.webdriver:
+                self.webdriver.quit()
+                logging.info("WebDriver successfully closed.")
+        except Exception as e:
+            logging.warning(f"Error closing webdriver: {e}")
+
+    def login(self):
+        try:
+            if self.utils.isLoggedIn():
+                logging.info("[LOGIN] Already logged-in")
+                if not self.check_banned_user():
+                    return  # Falls gesperrt, direkt raus
+                self.check_locked_user()
+            else:
+                logging.info("[LOGIN] Logging-in...")
+                self.execute_login()
+                logging.info("[LOGIN] Logged-in successfully!")
+                if not self.check_banned_user():
+                    return  # Falls gesperrt, direkt raus
+                self.check_locked_user()
+            assert self.utils.isLoggedIn()
+        except MaxRetryError as e:
+            logging.error(f"[LOGIN ERROR] Max retries exceeded: {e}")
+            self.quit_browser()
+            raise Exception("Max retries exceeded, skipping to the next account.")
+        except Exception as e:
+            logging.error(f"Error during login: {e}")
+            self.quit_browser()
+            raise
+    def execute_login(self) -> None:
         # Email field
         emailField = self.utils.waitUntilVisible(By.ID, "i0116")
         logging.info("[LOGIN] Entering email...")
         emailField.click()
-        emailField.send_keys(self.browser.username)
-        assert emailField.get_attribute("value") == self.browser.username
+        emailField.send_keys(self.browser.email)
+        assert emailField.get_attribute("value") == self.browser.email
         self.utils.waitUntilClickable(By.ID, "idSIButton9").click()
 
         # Passwordless check
@@ -52,13 +126,14 @@ class Login:
             # Passworless login, have user confirm code on phone
             codeField = self.utils.waitUntilVisible(By.ID, "displaySign")
             logging.warning(
-                "[LOGIN] Confirm your login with code %s on your phone (you have"
-                " one minute)!\a",
+                "[LOGIN] Confirm your login with code %s on your phone (you have one minute)!\a",
                 codeField.text,
             )
+            if CONFIG.get("apprise.notify.login-code"):
+                sendNotification(
+                    f"Confirm your login on your phone", f"Code: {codeField.text} (expires in 1 minute)")
             self.utils.waitUntilVisible(By.NAME, "kmsiForm", 60)
             logging.info("[LOGIN] Successfully verified!")
-
         else:
             # Password-based login, enter password from accounts.json
             passwordField = self.utils.waitUntilClickable(By.NAME, "passwd")
@@ -82,12 +157,9 @@ class Login:
             logging.debug("isTOTPEnabled = %s", isTOTPEnabled)
 
             if isDeviceAuthEnabled:
-                # For some reason, undetected chromedriver doesn't receive the confirmation
-                # after the user has confirmed the login on their phone.
+                # Device-based authentication not supported
                 raise Exception(
-                    "Unfortunatly, device auth is not supported yet. Turn on"
-                    " passwordless login in your account settings, use TOTPs or remove"
-                    " 2FA altogether."
+                    "Device authentication not supported. Please use TOTP or disable 2FA."
                 )
 
                 # Device auth, have user confirm code on phone
@@ -99,6 +171,9 @@ class Login:
                     " one minute)!\a",
                     codeField.text,
                 )
+                if CONFIG.get("apprise.notify.login-code"):
+                    sendNotification(
+                        f"Confirm your login on your phone", f"Code: {codeField.text} (expires in 1 minute)")
                 self.utils.waitUntilVisible(By.NAME, "kmsiForm", 60)
                 logging.info("[LOGIN] Successfully verified!")
 
@@ -108,15 +183,19 @@ class Login:
                     # TOTP token provided
                     logging.info("[LOGIN] Entering OTP...")
                     otp = TOTP(self.browser.totp.replace(" ", "")).now()
-                    otpField = self.utils.waitUntilClickable(By.ID, "idTxtBx_SAOTCC_OTC")
+                    otpField = self.utils.waitUntilClickable(
+                        By.ID, "idTxtBx_SAOTCC_OTC"
+                    )
                     otpField.send_keys(otp)
                     assert otpField.get_attribute("value") == otp
-                    self.utils.waitUntilClickable(By.ID, "idSubmit_SAOTCC_Continue").click()
-
+                    self.utils.waitUntilClickable(
+                        By.ID, "idSubmit_SAOTCC_Continue"
+                    ).click()
                 else:
                     # TOTP token not provided, manual intervention required
-                    assert self.args.visible, (
-                        "[LOGIN] 2FA detected, provide token in accounts.json or run in"
+                    assert CONFIG.browser.visible, (
+                        "[LOGIN] 2FA detected, provide token in accounts.json or or run in"
+                        "[LOGIN] 2FA detected, provide token in accounts.json or handle manually."
                         " visible mode to handle login."
                     )
                     print(
@@ -124,6 +203,9 @@ class Login:
                         " keep me signed in page."
                     )
                     input()
+
+        self.check_locked_user()
+        self.check_banned_user()
 
         self.utils.waitUntilVisible(By.NAME, "kmsiForm")
         self.utils.waitUntilClickable(By.ID, "acceptButton").click()
@@ -137,7 +219,7 @@ class Login:
 
         if isAskingToProtect:
             assert (
-                self.args.visible
+                CONFIG.browser.visible
             ), "Account protection detected, run in visible mode to handle login"
             print(
                 "Account protection detected, handle prompts and press enter when on rewards page"
