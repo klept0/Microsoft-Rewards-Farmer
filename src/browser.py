@@ -36,7 +36,7 @@ class Browser:
         self.email = account.email
         self.password = account.password
         self.totp = account.get('totp')
-        self.localeLang, self.localeGeo = self.getLanguageCountry(CONFIG.browser.language, CONFIG.browser.geolocation)
+        self.localeLang, self.localeGeo = self.getLanguageCountry()
         self.proxy = CONFIG.browser.proxy
         if not self.proxy and account.get('proxy'):
             self.proxy = account.proxy
@@ -217,12 +217,9 @@ class Browser:
         return sessionsDir
 
     @staticmethod
-    def getLanguageCountry(language: str, country: str) -> tuple[str, str]:
-        if not country:
-            country = CONFIG.browser.geolocation
-
-        if not language:
-            country = CONFIG.browser.language
+    def getLanguageCountry() -> tuple[str, str]:
+        country = CONFIG.browser.geolocation
+        language = CONFIG.browser.language
 
         if not language or not country:
             currentLocale = locale.getlocale()
