@@ -13,6 +13,7 @@
 param (
     [switch]$help = $false,
     [switch]$skipUpdate = $false,
+    [switch]$noCacheDelete = $false,
     [int]$maxRetries = 5,
     [string]$arguments = "",
     [string]$pythonPath = "",
@@ -33,6 +34,7 @@ if ($help) {
     Write-Host "Options:"
     Write-Host "  -help                 Display this help message."
     Write-Host "  -skipUpdate           Skip the script update."
+    Write-Host "  -noCacheDelete        Do not delete the cache folder if the script fails."
     Write-Host "  -maxRetries <int>     Maximum number of retries if the script fails (default: 5)."
     Write-Host "  -arguments <string>   Arguments to pass to the main script."
     Write-Host "  -pythonPath <string>  Path to the Python executable."
@@ -129,13 +131,15 @@ function Invoke-Farmer {
 
 Invoke-Farmer
 
-Write-Host "> All $name runs failed ($maxRetries/$maxRetries). Removing cache and re-trying..." -ForegroundColor $logColor
+if (-not $noCacheDelete) {
+    Write-Host "> All $name runs failed ($maxRetries/$maxRetries). Removing cache and re-trying..." -ForegroundColor $logColor
 
-if (Test-Path "$cacheFolder") {
-    Remove-Item -Recurse -Force "$cacheFolder" -ErrorAction SilentlyContinue
+    if (Test-Path "$cacheFolder") {
+        Remove-Item -Recurse -Force "$cacheFolder" -ErrorAction SilentlyContinue
+    }
+
+    Invoke-Farmer
 }
-
-Invoke-Farmer
 
 Write-Host "> All $name runs failed ($maxRetries/$maxRetries). Exiting with error." -ForegroundColor $logColor
 
