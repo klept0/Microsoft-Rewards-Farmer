@@ -91,6 +91,7 @@ if (-not $pythonPath) {
     exit 1
 }
 
+Write-Host "> Python executable found at $pythonPath" -ForegroundColor $logColor
 
 # ------------------------- Python dependencies update -------------------------
 # Try to update the Python dependencies if the script was updated
